@@ -24,7 +24,7 @@ img_width = 180
 coordinates = []
 dict = {}
 
-link = "/home/ubuntu/WholeImageTests/zebra/image16218crop0.jpg"
+link = "/home/ec2-user/visionaries/WholeImageTests/zebra/image51409crop0.jpg"
 
 im = cv2.imread(link)
 imOut = im.copy()
@@ -50,16 +50,8 @@ numShowRects = 1700
 
 # itereate over all the region proposals
 for i, rect in enumerate(rects):
-    # draw rectangle for region proposal till numShowRects
-    if (i < numShowRects):
     x, y, w, h = rect
     coordinates.append([float(y), float(x), float(y+h), float(x+w)])
-        #cv2.rectangle(imOut, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
-    else:
-        break
-
-    # show output
-    #cv2.imshow("Output", imOut)
 
 coordinates = tf.convert_to_tensor(coordinates)
 scores = []
@@ -93,7 +85,7 @@ scores = tf.convert_to_tensor(scores)
 #print("scores2: \n" + str(scores))
 
 max_output_size = 7
-iou_threshold = 0.3
+iou_threshold = 0.15
 
 #scores = tf.convert_to_tensor(scores)
 max_output_size = tf.convert_to_tensor(max_output_size)
