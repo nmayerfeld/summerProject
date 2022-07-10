@@ -1,6 +1,7 @@
 import tensorflow_datasets as tfds
 import os as os
 from PIL import Image,ImageDraw
+import random
 import matplotlib.pyplot as plt
 labelKey=['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'truck', 'train', 'boat', 'traffic-light', 'fire-hydrant', 'stop-sign',
 'parking-meter','bench','bird','cat','dog','horse','sheep','cow','elephant','bear','zebra','giraffe','backpack','umbrella','handbag','tie','suitcase',
@@ -17,16 +18,16 @@ for i in range(15,24):
       print(error)
 try:
    os.mkdir("sortedPics/forTraining/teddy-bear")
-   os.mkdir("sortedPics/forTraining/background")
 except OSError as error:
    print(error)
-picNum=1
 coco_data = tfds.load('coco', split='train', shuffle_files=True)
-for num,example in enumerate(coco_data):
+for example in coco_data:
    image = example['image']
+   imageID= example['image/id'].numpy()
    labels = example['objects']['label']
    bboxes = example['objects']['bbox']
    labelNums=labels.numpy()
+   print(imageID)
    print(labelNums)
    shape=image.shape
    pil_image=Image.fromarray(image.numpy())
@@ -38,13 +39,5 @@ for num,example in enumerate(coco_data):
          img=imageForCrop.crop((cord[1]*shape[1],cord[0]*shape[0],cord[3]*shape[1],cord[2]*shape[0]))
          width,height=img.size
          if width>80 and height>80:
-            filename="sortedPics/forTraining/"+labelKey[labelNums[count]]+"/image"+str(num)+"crop"+str(count)+".jpg"
+            filename="sortedPics/forTraining/"+labelKey[labelNums[count]]+"/image"+str(imageID)+"crop"+str(count)+".jpg"
             img.save(filename)
-      elif(picNum%20==1):
-         cord=bbox.numpy()
-         img=imageForCrop.crop((cord[1]*shape[1],cord[0]*shape[0],cord[3]*shape[1],cord[2]*shape[0]))
-         width,height=img.size
-         if width>80 and height>80:
-            filename="sortedPics/forTraining/background/image"+str(num)+"crop"+str(count)+".jpg"
-            img.save(filename)
-      picNum+=1
