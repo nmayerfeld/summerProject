@@ -52,8 +52,8 @@ numShowRects = 1700
 for i, rect in enumerate(rects):
     # draw rectangle for region proposal till numShowRects
     if (i < numShowRects):
-        x, y, w, h = rect
-        coordinates.append([float(y), float(x), float(y+h), float(x+w)])
+    x, y, w, h = rect
+    coordinates.append([float(y), float(x), float(y+h), float(x+w)])
         #cv2.rectangle(imOut, (x, y), (x+w, y+h), (0, 255, 0), 1, cv2.LINE_AA)
     else:
         break
