@@ -13,7 +13,7 @@ try:
    os.mkdir("sortedPics/forTraining/background")
 except OSError as error:
    print(error)
-coco_data = tfds.load('coco', split='train', shuffle_files=True)
+coco_data = tfds.load('coco', shuffle_files=True)
 for example in coco_data:
    image = example['image']
    imageID= example['image/id'].numpy()
