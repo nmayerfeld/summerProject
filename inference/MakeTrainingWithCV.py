@@ -9,7 +9,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from keras.models import load_model
-import random
 import sys
 import cv2
 import tensorflow_datasets as tfds
@@ -23,6 +22,11 @@ numbers = [15,16,17,18,19,20,21,22,23]
 
 cv2.setUseOptimized(True)
 cv2.setNumThreads(4)
+
+try:
+   os.mkdir("newcroptesting")
+except OSError as error:
+   pass
 
 coco_data = tfds.load('coco', split='train', shuffle_files=True)
 for num,example in enumerate(coco_data):
@@ -58,7 +62,7 @@ for num,example in enumerate(coco_data):
                 xB = min(right,right2)
                 yB = min(bottom, bottom2)
                 # compute the area of intersection rectangle
-                interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+                interArea = (xB - xA + 1) * (yB - yA + 1)
                 # compute the area of both the prediction and ground-truth
                 # rectangles
                 boxAArea = (right - left + 1) * (bottom - top + 1)
@@ -79,15 +83,18 @@ for num,example in enumerate(coco_data):
         iou_threshold = tf.convert_to_tensor(iou_threshold)
         selected_indices = tf.image.non_max_suppression(coordinates, scores, max_output_size, iou_threshold, score_threshold = .4) #how strongly do we want our new boxes to overlap with the original tensorflow animal box
         selected_boxes = tf.gather(coordinates, selected_indices)
+        print("Stage 1:")
         print(selected_boxes)
         copy = im.copy()
         copy = Image.fromarray(copy)
         for index, box in enumerate(selected_boxes):
+            print("This should print")
+            print(box)
             box = box.numpy()
             top, left, bottom, right = box[0], box[1], box[2], box[3]
             draw = ImageDraw.Draw(copy)
             draw.rectangle([left, top, right, bottom], outline = "red")
-            copy.save("newcroptesting/" +count +index +".jpg")
+            copy.save("newcroptesting/" +str(count) + str(index) +".jpg")
 
 
 
