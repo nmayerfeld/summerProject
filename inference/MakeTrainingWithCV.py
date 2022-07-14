@@ -47,6 +47,8 @@ for num,example in enumerate(coco_data):
     if label in numbers:
         print("YAY")
         bbox = bboxes[count].numpy()
+        top, left, bottom, right = bbox[0]*shape[0], bbox[1]*shape[1], bbox[2]*shape[0], bbox[3]*shape[1] #this is a tensorflow box of an animal
+        
         print('Total Number of Region Proposals: {}'.format(len(rects)))
         numShowRects = 4000
         scores = []
@@ -54,7 +56,6 @@ for num,example in enumerate(coco_data):
         for i, rect in enumerate(rects):
             if (i < numShowRects):
                 x, y, w, h = rect
-                top, left, bottom, right = bbox[0], bbox[1], bbox[2], bbox[3] #this is a tensorflow box of an animal
                 top2, left2, bottom2, right2 = float(y), float(x), float(y+h), float(x+w) #this is a box from opencv
                 coordinates.append([float(y), float(x), float(y+h), float(x+w)])
                 xA = max(left, left2)
@@ -78,23 +79,25 @@ for num,example in enumerate(coco_data):
         scores = tf.convert_to_tensor(scores)
         coordinates = tf.convert_to_tensor(coordinates)
         max_output_size = 2 #how many more boxes do we want per animal? Probably just like 2
-        iou_threshold = .9 #this is NOT the iou from above, it's what iou we want to be allowed between the 2 (or more) new boxes we make. What should it be?
+        iou_threshold = .6 #this is NOT the iou from above, it's what iou we want to be allowed between the 2 (or more) new boxes we make. What should it be?
         max_output_size = tf.convert_to_tensor(max_output_size)
         iou_threshold = tf.convert_to_tensor(iou_threshold)
-        selected_indices = tf.image.non_max_suppression(coordinates, scores, max_output_size, iou_threshold, score_threshold = .4) #how strongly do we want our new boxes to overlap with the original tensorflow animal box
+        selected_indices = tf.image.non_max_suppression(coordinates, scores, max_output_size, iou_threshold, score_threshold = .7) #how strongly do we want our new boxes to overlap with the original tensorflow animal box
         selected_boxes = tf.gather(coordinates, selected_indices)
         print("Stage 1:")
         print(selected_boxes)
         copy = im.copy()
         copy = Image.fromarray(copy)
+        draw = ImageDraw.Draw(copy)
+        draw.rectangle([left, top, right, bottom], outline = "blue")
         for index, box in enumerate(selected_boxes):
             print("This should print")
             print(box)
             box = box.numpy()
             top, left, bottom, right = box[0], box[1], box[2], box[3]
-            draw = ImageDraw.Draw(copy)
             draw.rectangle([left, top, right, bottom], outline = "red")
-            copy.save("newcroptesting/" +str(count) + str(index) +".jpg")
+
+        copy.save("newcroptesting/" +str(num) +".jpg")
 
 
 
