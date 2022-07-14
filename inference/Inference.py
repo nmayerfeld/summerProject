@@ -16,8 +16,8 @@ from time import sleep
 cv2.setUseOptimized(True);
 cv2.setNumThreads(4);
 
-model = load_model('/home/ubuntu/visionaries/summerProject/model4.h5')
-class_names = ['background', 'bear', 'cat', 'cow', 'dog', 'elephant', 'giraffe', 'horse', 'sheep','teddy bear', 'zebra']
+model = load_model('/home/ec2-user/visionaries/ProjectRepo/summerProject/model4.h5')
+class_names = ['background',  'bear', 'cat', 'cow', 'dog', 'elephant', 'giraffe', 'horse', 'sheep', 'teddy bear','zebra']
 
 img_height = 160
 img_width = 160
@@ -25,7 +25,7 @@ img_width = 160
 coordinates = []
 dict = {}
 
-link = "/home/ubuntu/WholeImageTests/zebra/image19844crop0.jpg"
+link = "/home/ec2-user/visionaries/WholeImageTests/cow/image26044crop0.jpg"
 
 im = cv2.imread(link)
 imOut = im.copy()
