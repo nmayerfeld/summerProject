@@ -93,6 +93,8 @@ coco_data = tfds.load('coco')
 for split in coco_data.keys():
     data_set = coco_data[split]
     for num,example in enumerate(data_set):
+        if num > 500:
+            break
         scores = []
         coordinates = []
         print("Picture number: " + str(num))
@@ -134,6 +136,18 @@ for split in coco_data.keys():
                             bbox = bboxes[count].numpy()
                             top, left, bottom, right = bbox[0] * shape[0], bbox[1] * shape[1], bbox[2] * shape[0], bbox[3] * shape[1] #this is a tensorflow box of an animal
                             if (right - left + 1) * (bottom - top + 1) < 6400:
+                                break
+                            skip = False
+                            for second_label in labelNums:
+                                if second_label in numbers:
+                                    bbox = bboxes[count].numpy()
+                                    top3, left3, bottom3, right3 = bbox[0] * shape[0], bbox[1] * shape[1], bbox[2] * shape[0], bbox[3] * shape[1] #this is a tensorflow box of an animal
+                                    if top == top3 and left == left3 and bottom == bottom3 and right == right3:
+                                        continue
+                                    else:
+                                        if top3 > top and top3 < bottom and bottom3 > top and bottom3 < bottom and left3 > left and left3 < right and right3 > left and right3 < right:
+                                            skip = True
+                            if skip:
                                 continue
                             else:
                                 #draw.rectangle([left, top, right, bottom], outline = "blue")     
@@ -155,8 +169,6 @@ for split in coco_data.keys():
                                     #draw.rectangle([left2, top2, right2, bottom2], outline = "red")
                                     #draw.text((left2 + 10, top2 + 10), "top:" + str(top2) + ", bottom:" + str(bottom2) + ", left:" + str(left2) + ", right:" + str(right2), color = "orange")
                                     print(iou)
-                                    for list in coordinates:
-                                        top, left, bottom, right = list[0], list[1], list[2], list[3]
                                     scores.append(float(iou))
                                     coordinates.append([float(top2), float(left2), float(bottom2), float(right2)])
                                     dict[top2, left2, bottom2, right2] = (iou, label)
