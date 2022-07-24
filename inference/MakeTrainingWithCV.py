@@ -75,12 +75,6 @@ for item in keys:
    except OSError as error:
       continue
 
-for item in keys:
-   try:
-      os.mkdir("Tests/"+item)
-   except OSError as error:
-      continue
-
 cv2.setUseOptimized(True)
 cv2.setNumThreads(4)
 
