@@ -84,10 +84,6 @@ for item in keys:
 cv2.setUseOptimized(True)
 cv2.setNumThreads(4)
 
-try:
-   os.mkdir("newcroptesting")
-except OSError as error:
-   pass
 
 coco_data = tfds.load('coco')
 for split in coco_data.keys():
@@ -107,90 +103,90 @@ for split in coco_data.keys():
         if areDisjoint(labelNums, numbers, len(labelNums), len(numbers)):
             continue
         else:
-            shape = image.shape
-            im = image.numpy()
-            copy = im.copy()
-            copy = Image.fromarray(copy)
-            draw = ImageDraw.Draw(copy)
-            for count,label in enumerate(labelNums):
-                if label in numbers:
-                    save = True
-                    # bbox = bboxes[count].numpy()
-                    # top, left, bottom, right = bbox[0] * shape[0], bbox[1] * shape[1], bbox[2] * shape[0], bbox[3] * shape[1] #this is a tensorflow box of an animal
-                    # if (right - left + 1) * (bottom - top + 1) < 3600:
-                    #     continue
-                    # else:
-                    #     draw.rectangle([left, top, right, bottom], outline = "blue")
-            if save:
-                ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
-                ss.setBaseImage(im)
-                ss.switchToSelectiveSearchFast()
-                rects = ss.process()
-                print('Total Number of Region Proposals: {}'.format(len(rects)))
-                for idx, rect in enumerate(rects):
-                    left2, top2, width, height = rect
-                    right2 = width + left2 - 1
-                    bottom2 = top2 + height - 1
-                    for count,label in enumerate(labelNums):
-                        if label in numbers:
-                            bbox = bboxes[count].numpy()
-                            top, left, bottom, right = bbox[0] * shape[0], bbox[1] * shape[1], bbox[2] * shape[0], bbox[3] * shape[1] #this is a tensorflow box of an animal
-                            if (right - left + 1) * (bottom - top + 1) < 6400:
-                                break
-                            skip = False
-                            for second_label in labelNums:
-                                if second_label in numbers:
-                                    bbox = bboxes[count].numpy()
-                                    top3, left3, bottom3, right3 = bbox[0] * shape[0], bbox[1] * shape[1], bbox[2] * shape[0], bbox[3] * shape[1] #this is a tensorflow box of an animal
-                                    if top == top3 and left == left3 and bottom == bottom3 and right == right3:
-                                        continue
-                                    else:
-                                        if top3 > top and top3 < bottom and bottom3 > top and bottom3 < bottom and left3 > left and left3 < right and right3 > left and right3 < right:
-                                            skip = True
-                            if skip:
-                                continue
-                            else:
-                                #draw.rectangle([left, top, right, bottom], outline = "blue")     
-                                inter_width = width_overlap(left, right, left2, right2)
-                                inter_height = height_overlap(top, bottom, top2, bottom2)
-                                # compute the area of intersection rectangle
-                                interArea = inter_width * inter_height
-                                # compute the area of both the prediction and ground-truth
-                                # rectangles
-                                boxAArea = (right - left + 1) * (bottom - top + 1)
-                                boxBArea = (right2 - left2 + 1) * (bottom2 - top2 + 1)
-                                # compute the intersection over union by taking the intersection
-                                # area and dividing it by the sum of prediction + ground-truth
-                                # areas - the interesection area
-                                iou = interArea / float(boxAArea + boxBArea - interArea) 
-                                iou = round(iou * 100)
-                                if iou > 60:
-                                    #draw.text((left2 + 3, top2 + 3), str(iou), color = "green")
-                                    #draw.rectangle([left2, top2, right2, bottom2], outline = "red")
-                                    #draw.text((left2 + 10, top2 + 10), "top:" + str(top2) + ", bottom:" + str(bottom2) + ", left:" + str(left2) + ", right:" + str(right2), color = "orange")
-                                    print(iou)
-                                    scores.append(float(iou))
-                                    coordinates.append([float(top2), float(left2), float(bottom2), float(right2)])
-                                    dict[top2, left2, bottom2, right2] = (iou, label)
-                max_output_size = 3 #how many more boxes do we want per animal? Probably just like 2
-                iou_threshold = .6
-                print(coordinates)
-                print(scores)
-                scores = tf.convert_to_tensor(scores)
-                coordinates = tf.convert_to_tensor(coordinates)
-                print(coordinates)
-                if(len(scores) > 0):
-                    selected_indices = tf.image.non_max_suppression(coordinates, scores, max_output_size, iou_threshold, score_threshold = .8) #how strongly do we want our new boxes to overlap with the original tensorflow animal box
-                    selected_boxes = tf.gather(coordinates, selected_indices)
-                    for index, box in enumerate(selected_boxes):
-                        box = box.numpy()
-                        top, left, bottom, right = box[0], box[1], box[2], box[3]
-                        newcopy = copy.copy()
-                        img = newcopy.crop((left, top, right, bottom))
-                        if random.randint(0, 100) < 8:
-                            filename="Tests/"+keys[dict[top, left, bottom, right][1] - 15]+ "/" + str(id) + "Crop" + str(index) +".jpg"
-                            img.save(filename)
-                        else: 
+            if random.randint(0, 100) < 5:
+                filename = "Tests/"+ str(id) + ".jpg"
+                img.save(filename)
+            else:
+                shape = image.shape
+                im = image.numpy()
+                copy = im.copy()
+                copy = Image.fromarray(copy)
+                draw = ImageDraw.Draw(copy)
+                for count,label in enumerate(labelNums):
+                    if label in numbers:
+                        save = True
+                        # bbox = bboxes[count].numpy()
+                        # top, left, bottom, right = bbox[0] * shape[0], bbox[1] * shape[1], bbox[2] * shape[0], bbox[3] * shape[1] #this is a tensorflow box of an animal
+                        # if (right - left + 1) * (bottom - top + 1) < 3600:
+                        #     continue
+                        # else:
+                        #     draw.rectangle([left, top, right, bottom], outline = "blue")
+                if save:
+                    ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
+                    ss.setBaseImage(im)
+                    ss.switchToSelectiveSearchFast()
+                    rects = ss.process()
+                    print('Total Number of Region Proposals: {}'.format(len(rects)))
+                    for idx, rect in enumerate(rects):
+                        left2, top2, width, height = rect
+                        right2 = width + left2 - 1
+                        bottom2 = top2 + height - 1
+                        for count,label in enumerate(labelNums):
+                            if label in numbers:
+                                bbox = bboxes[count].numpy()
+                                top, left, bottom, right = bbox[0] * shape[0], bbox[1] * shape[1], bbox[2] * shape[0], bbox[3] * shape[1] #this is a tensorflow box of an animal
+                                if (right - left + 1) * (bottom - top + 1) < 6400:
+                                    break
+                                skip = False
+                                for index, second_label in enumerate(labelNums):
+                                    if second_label in numbers:
+                                        bbox = bboxes[index].numpy()
+                                        top3, left3, bottom3, right3 = bbox[0] * shape[0], bbox[1] * shape[1], bbox[2] * shape[0], bbox[3] * shape[1] #this is a tensorflow box of an animal
+                                        if top == top3 and left == left3 and bottom == bottom3 and right == right3:
+                                            continue
+                                        else:
+                                            if top3 > top and top3 < bottom and bottom3 > top and bottom3 < bottom and left3 > left and left3 < right and right3 > left and right3 < right and label != second_label:
+                                                skip = True
+                                if skip:
+                                    continue
+                                else:
+                                    #draw.rectangle([left, top, right, bottom], outline = "blue")     
+                                    inter_width = width_overlap(left, right, left2, right2)
+                                    inter_height = height_overlap(top, bottom, top2, bottom2)
+                                    # compute the area of intersection rectangle
+                                    interArea = inter_width * inter_height
+                                    # compute the area of both the prediction and ground-truth
+                                    # rectangles
+                                    boxAArea = (right - left + 1) * (bottom - top + 1)
+                                    boxBArea = (right2 - left2 + 1) * (bottom2 - top2 + 1)
+                                    # compute the intersection over union by taking the intersection
+                                    # area and dividing it by the sum of prediction + ground-truth
+                                    # areas - the interesection area
+                                    iou = interArea / float(boxAArea + boxBArea - interArea) 
+                                    iou = round(iou * 100)
+                                    if iou > 60:
+                                        #draw.text((left2 + 3, top2 + 3), str(iou), color = "green")
+                                        #draw.rectangle([left2, top2, right2, bottom2], outline = "red")
+                                        #draw.text((left2 + 10, top2 + 10), "top:" + str(top2) + ", bottom:" + str(bottom2) + ", left:" + str(left2) + ", right:" + str(right2), color = "orange")
+                                        print(iou)
+                                        scores.append(float(iou))
+                                        coordinates.append([float(top2), float(left2), float(bottom2), float(right2)])
+                                        dict[top2, left2, bottom2, right2] = (iou, label)
+                    max_output_size = 3 #how many more boxes do we want per animal? Probably just like 2
+                    iou_threshold = .6
+                    print(coordinates)
+                    print(scores)
+                    scores = tf.convert_to_tensor(scores)
+                    coordinates = tf.convert_to_tensor(coordinates)
+                    print(coordinates)
+                    if(len(scores) > 0):
+                        selected_indices = tf.image.non_max_suppression(coordinates, scores, max_output_size, iou_threshold, score_threshold = .8) #how strongly do we want our new boxes to overlap with the original tensorflow animal box
+                        selected_boxes = tf.gather(coordinates, selected_indices)
+                        for index, box in enumerate(selected_boxes):
+                            box = box.numpy()
+                            top, left, bottom, right = box[0], box[1], box[2], box[3]
+                            newcopy = copy.copy()
+                            img = newcopy.crop((left, top, right, bottom))
                             filename="train/"+keys[dict[top, left, bottom, right][1] - 15]+ "/" + str(id) + "Crop" + str(index) +".jpg"
                             img.save(filename)
 
