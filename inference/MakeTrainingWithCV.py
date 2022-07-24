@@ -90,6 +90,9 @@ for split in coco_data.keys():
         print("Picture number: " + str(num))
         save = False
         image = example['image']
+        im = image.numpy()
+        copy = im.copy()
+        copy = Image.fromarray(copy)
         labels = example['objects']['label']
         bboxes = example['objects']['bbox']
         id = example['image/id'].numpy()
@@ -99,13 +102,10 @@ for split in coco_data.keys():
         else:
             if random.randint(0, 100) < 5:
                 filename = "Tests/"+ str(id) + ".jpg"
-                img.save(filename)
+                copy.save(filename)
             else:
                 shape = image.shape
-                im = image.numpy()
-                copy = im.copy()
-                copy = Image.fromarray(copy)
-                draw = ImageDraw.Draw(copy)
+                #draw = ImageDraw.Draw(copy)
                 for count,label in enumerate(labelNums):
                     if label in numbers:
                         save = True
