@@ -100,7 +100,7 @@ for split in coco_data.keys():
         if areDisjoint(labelNums, numbers, len(labelNums), len(numbers)):
             continue
         else:
-            if random.randint(0, 100) < 5:
+            if random.randint(0, 100) < 4:
                 filename = "Tests/"+ str(id) + ".jpg"
                 copy.save(filename)
             else:
