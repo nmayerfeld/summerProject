@@ -83,8 +83,8 @@ coco_data = tfds.load('coco')
 for split in coco_data.keys():
     data_set = coco_data[split]
     for num,example in enumerate(data_set):
-        if num > 500:
-            break
+        #if num > 500:
+        #    break
         scores = []
         coordinates = []
         print("Picture number: " + str(num))
@@ -166,7 +166,7 @@ for split in coco_data.keys():
                                         scores.append(float(iou))
                                         coordinates.append([float(top2), float(left2), float(bottom2), float(right2)])
                                         dict[top2, left2, bottom2, right2] = (iou, label)
-                    max_output_size = 3 #how many more boxes do we want per animal? Probably just like 2
+                    max_output_size = 5 #how many more boxes do we want per animal? Probably just like 2
                     iou_threshold = .6
                     print(coordinates)
                     print(scores)
