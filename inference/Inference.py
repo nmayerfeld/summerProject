@@ -17,7 +17,7 @@ from time import sleep
 cv2.setUseOptimized(True);
 cv2.setNumThreads(4);
 
-model = load_model('/home/ec2-user/visionaries/ss_model/RNm5PostTune')
+model = load_model('/home/ubuntu/visionaries/summerProject/inference/RNm5PostTune.h5')
 class_names = ['background', 'bear', 'cat', 'cow', 'dog', 'elephant', 'giraffe', 'horse', 'sheep', 'zebra']
 
 img_height = 160
@@ -110,11 +110,25 @@ for filename in os.listdir(directory):
 
     selected_boxes = tf.gather(coordinates, selected_indices)
 
+    counter = 0
+    total = 0
+    for box in selected_boxes:
+        top, left, bottom, right = box[0].numpy(), box[1].numpy(), box[2].numpy(), box[3].numpy() 
+        total += (right-left)*(bottom - top)
+        counter += 1
+    if counter != 0:
+        average = total/counter
+
+
     sizes = []
     coordinates2 = []
     for box in selected_boxes:
         top, left, bottom, right = box[0].numpy(), box[1].numpy(), box[2].numpy(), box[3].numpy()
-        sizes.append((right - left)*(bottom-top))
+        size = (right - left)*(bottom-top)
+        denominator = (average+ (average/100)) - size
+        if denominator == 0:
+            denominator = .01
+        sizes.append(np.float32((1/(denominator)) + 1))
         coordinates2.append([float(top), float(left), float(bottom), float(right)])
     print("Sizes: " + str(sizes))
     sizes = tf.convert_to_tensor(sizes)
@@ -131,7 +145,7 @@ for filename in os.listdir(directory):
         iou_threshold = tf.convert_to_tensor(iou_threshold)
 
         selected_indices = tf.image.non_max_suppression(
-            coordinates2, sizes, max_output_size, iou_threshold, score_threshold = .99)
+            coordinates2, sizes, max_output_size, iou_threshold, score_threshold = -1000.01)
 
         selected_boxes = tf.gather(coordinates2, selected_indices)
 
@@ -151,4 +165,4 @@ for filename in os.listdir(directory):
         except OSError as error:
             pass
 
-        im.save("/home/ec2-user/visionaries/PostPatchInferencedImages/" + os.path.basename(link))
+        im.save("/home/ec2-user/PostPatchInferencedImages/" + os.path.basename(link))
