@@ -17,13 +17,13 @@ from time import sleep
 cv2.setUseOptimized(True);
 cv2.setNumThreads(4);
 
-model = load_model('/home/ubuntu/visionaries/summerProject/inference/RNm5PostTune.h5')
+model = load_model('/home/ec2-user/visionaries/ss_model/RNm5PostTune')
 class_names = ['background', 'bear', 'cat', 'cow', 'dog', 'elephant', 'giraffe', 'horse', 'sheep', 'zebra']
 
 img_height = 160
 img_width = 160
 
-directory='/home/ubuntu/WholeImageTests/horse'
+directory='/home/ec2-user/visionaries/Tests'
 for filename in os.listdir(directory):
     coordinates = []
     dict = {}
@@ -45,7 +45,7 @@ for filename in os.listdir(directory):
     # set input image on which we will run segmentation
     ss.setBaseImage(im)
 
-    ss.switchToSelectiveSearchQuality()
+    ss.switchToSelectiveSearchFast()
 
     rects = ss.process()
     print('Total Number of Region Proposals: {}'.format(len(rects)))
@@ -100,7 +100,7 @@ for filename in os.listdir(directory):
     scores = tf.convert_to_tensor(scores)
 
     max_output_size = 30
-    iou_threshold = 0.6
+    iou_threshold = 0.999
 
     max_output_size = tf.convert_to_tensor(max_output_size)
     iou_threshold = tf.convert_to_tensor(iou_threshold)
@@ -116,11 +116,13 @@ for filename in os.listdir(directory):
         top, left, bottom, right = box[0].numpy(), box[1].numpy(), box[2].numpy(), box[3].numpy()
         sizes.append((right - left)*(bottom-top))
         coordinates2.append([float(top), float(left), float(bottom), float(right)])
+    print("Sizes: " + str(sizes))
     sizes = tf.convert_to_tensor(sizes)
+    print("Tensor Sizes: " + str(sizes))
     coordinates2 = tf.convert_to_tensor(coordinates2)
 
     if len(coordinates2) != 0:
-        
+        print("number of boxes: " + str(len(coordinates2)))
 
         max_output_size = 7
         iou_threshold = 0.01
@@ -129,7 +131,7 @@ for filename in os.listdir(directory):
         iou_threshold = tf.convert_to_tensor(iou_threshold)
 
         selected_indices = tf.image.non_max_suppression(
-            coordinates2, sizes, max_output_size, iou_threshold, score_threshold = .01)
+            coordinates2, sizes, max_output_size, iou_threshold, score_threshold = .99)
 
         selected_boxes = tf.gather(coordinates2, selected_indices)
 
@@ -137,6 +139,7 @@ for filename in os.listdir(directory):
         imageRGB = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         im = Image.fromarray(imageRGB)
 
+        print("Number of selected boxes: " + str(len(selected_boxes)))
         for box in selected_boxes:
             top, left, bottom, right = box[0].numpy(), box[1].numpy(), box[2].numpy(), box[3].numpy()
             draw = ImageDraw.Draw(im)
@@ -148,4 +151,4 @@ for filename in os.listdir(directory):
         except OSError as error:
             pass
 
-        im.save("/home/ubuntu/PostPatchInferencedImages/" + os.path.basename(link))
+        im.save("/home/ec2-user/visionaries/PostPatchInferencedImages/" + os.path.basename(link))
