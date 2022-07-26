@@ -17,17 +17,17 @@ from time import sleep
 cv2.setUseOptimized(True);
 cv2.setNumThreads(4);
 
-model = load_model('/home/ubuntu/visionaries/summerProject/inference/RNm5PostTune.h5')
+model = load_model('/home/ec2-user/visionaries/ss_model/RNm7PostTune')
 class_names = ['background', 'bear', 'cat', 'cow', 'dog', 'elephant', 'giraffe', 'horse', 'sheep', 'zebra']
 
 img_height = 160
 img_width = 160
 
-directory='/home/ec2-user/visionaries/Tests'
+directory='/home/ec2-user/visionaries/Whole_Image_Test_Pics'
 for filename in os.listdir(directory):
+    link = os.path.join(directory, filename)
     coordinates = []
     dict = {}
-    link = os.path.join(directory, filename)
     im = cv2.imread(link)
     imOut = im.copy()
 
@@ -63,106 +63,111 @@ for filename in os.listdir(directory):
     coordinates = tf.convert_to_tensor(coordinates)
     scores = []
     pics = []
-    for box in coordinates:
-        copy = im.copy()
-        RGB_image = cv2.cvtColor(copy, cv2.COLOR_BGR2RGB)
-        copy = Image.fromarray(RGB_image)
-        box = box.numpy()
-        top, left, bottom, right = box[0], box[1], box[2], box[3]
-        croppedImage = copy.crop((left, top, right, bottom))
-        croppedImage = croppedImage.resize((img_height, img_width))
-        img_array = tf.keras.utils.img_to_array(croppedImage)
-        pics.append(img_array)
-
-    np_pics = np.array(pics)
-    print("making predictions")
-    predictions = model.predict(np_pics)
-    print("Predictions completed.")
-    sleep(3)
-
-
-    for index, prediction in enumerate(predictions):
-        score = prediction
-        top, left, bottom, right =  coordinates[index][0].numpy(), coordinates[index][1].numpy(), coordinates[index][2].numpy(), coordinates[index][3].numpy(),
-        dict[(top, left, bottom, right)] = class_names[np.argmax(score)]
-
-        if (class_names[np.argmax(score)] == "background"):
-            scores.append(0)       
-        else:
-            scores.append(np.max(score))
-        print(
-        "This image most likely belongs to {} with a {:.2f} percent confidence."
-        .format(class_names[np.argmax(score)], 100 * np.max(score))
-        )
-        
+    print("Number of coordinate boxes: " + str(len(coordinates)))
+    if len(coordinates) == 0:
+        continue
+    else:
+        for box in coordinates:
+            copy = im.copy()
+            RGB_image = cv2.cvtColor(copy, cv2.COLOR_BGR2RGB)
+            copy = Image.fromarray(RGB_image)
+            box = box.numpy()
+            top, left, bottom, right = box[0], box[1], box[2], box[3]
+            croppedImage = copy.crop((left, top, right, bottom))
+            croppedImage = croppedImage.resize((img_height, img_width))
+            img_array = tf.keras.utils.img_to_array(croppedImage)
+            pics.append(img_array)
+        print("Number of patches: " + str(len(pics)))
+        np_pics = np.array(pics)
+        print("making predictions")
+        predictions = model.predict(np_pics)
+        print("Predictions completed.")
 
 
-    scores = tf.convert_to_tensor(scores)
 
-    max_output_size = 30
-    iou_threshold = 0.999
+        for index, prediction in enumerate(predictions):
+            score = prediction
+            top, left, bottom, right =  coordinates[index][0].numpy(), coordinates[index][1].numpy(), coordinates[index][2].numpy(), coordinates[index][3].numpy(),
+            dict[(top, left, bottom, right)] = class_names[np.argmax(score)]
 
-    max_output_size = tf.convert_to_tensor(max_output_size)
-    iou_threshold = tf.convert_to_tensor(iou_threshold)
-
-    selected_indices = tf.image.non_max_suppression(
-        coordinates, scores, max_output_size, iou_threshold, score_threshold = .995)
-
-    selected_boxes = tf.gather(coordinates, selected_indices)
-
-    counter = 0
-    total = 0
-    for box in selected_boxes:
-        top, left, bottom, right = box[0].numpy(), box[1].numpy(), box[2].numpy(), box[3].numpy() 
-        total += (right-left)*(bottom - top)
-        counter += 1
-    if counter != 0:
-        average = total/counter
+            if (class_names[np.argmax(score)] == "background"):
+                scores.append(0.0)       
+            else:
+                scores.append(np.max(score))
+            print(
+            "This image most likely belongs to {} with a {:.2f} percent confidence."
+            .format(class_names[np.argmax(score)], 100 * np.max(score))
+            )
+            
 
 
-    sizes = []
-    coordinates2 = []
-    for box in selected_boxes:
-        top, left, bottom, right = box[0].numpy(), box[1].numpy(), box[2].numpy(), box[3].numpy()
-        size = (right - left)*(bottom-top)
-        denominator = (average+ (average/100)) - size
-        if denominator == 0:
-            denominator = .01
-        sizes.append(np.float32((1/(denominator)) + 1))
-        coordinates2.append([float(top), float(left), float(bottom), float(right)])
-    print("Sizes: " + str(sizes))
-    sizes = tf.convert_to_tensor(sizes)
-    print("Tensor Sizes: " + str(sizes))
-    coordinates2 = tf.convert_to_tensor(coordinates2)
+        scores = tf.convert_to_tensor((scores))
 
-    if len(coordinates2) != 0:
-        print("number of boxes: " + str(len(coordinates2)))
-
-        max_output_size = 7
-        iou_threshold = 0.01
+        max_output_size = 30
+        iou_threshold = 0.999
 
         max_output_size = tf.convert_to_tensor(max_output_size)
         iou_threshold = tf.convert_to_tensor(iou_threshold)
-
+        
+        print("scores: " + str(scores))
         selected_indices = tf.image.non_max_suppression(
-            coordinates2, sizes, max_output_size, iou_threshold, score_threshold = -1000.01)
+            coordinates, scores, max_output_size, iou_threshold, score_threshold = .995)
 
-        selected_boxes = tf.gather(coordinates2, selected_indices)
+        selected_boxes = tf.gather(coordinates, selected_indices)
+
+        counter = 0
+        total = 0
+        for box in selected_boxes:
+            top, left, bottom, right = box[0].numpy(), box[1].numpy(), box[2].numpy(), box[3].numpy() 
+            total += (right-left)*(bottom - top)
+            counter += 1
+        if counter != 0:
+            average = total/counter
 
 
-        imageRGB = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-        im = Image.fromarray(imageRGB)
-
-        print("Number of selected boxes: " + str(len(selected_boxes)))
+        sizes = []
+        coordinates2 = []
         for box in selected_boxes:
             top, left, bottom, right = box[0].numpy(), box[1].numpy(), box[2].numpy(), box[3].numpy()
-            draw = ImageDraw.Draw(im)
-            draw.rectangle([left, top, right-1, bottom-1], outline = "red")
-            draw.text((left + 3, top + 3), dict[(top, left, bottom, right)], color = "red")
-                
-        try:
-            os.mkdir("PostPatchInferencedImages")
-        except OSError as error:
-            pass
+            size = (right - left) * (bottom-top)
+            denominator = (average + (average/100)) - size
+            if denominator == 0:
+                denominator = .01
+            sizes.append(np.float32((1/(denominator)) + 1))
+            coordinates2.append([float(top), float(left), float(bottom), float(right)])
+        print("Sizes: " + str(sizes))
+        sizes = tf.convert_to_tensor(sizes)
+        print("Tensor Sizes: " + str(sizes))
+        coordinates2 = tf.convert_to_tensor(coordinates2)
 
-        im.save("/home/ec2-user/PostPatchInferencedImages/" + os.path.basename(link))
+        if len(coordinates2) != 0:
+            print("number of boxes: " + str(len(coordinates2)))
+
+            max_output_size = 7
+            iou_threshold = 0.01
+
+            max_output_size = tf.convert_to_tensor(max_output_size)
+            iou_threshold = tf.convert_to_tensor(iou_threshold)
+
+            selected_indices = tf.image.non_max_suppression(
+                coordinates2, sizes, max_output_size, iou_threshold, score_threshold = -1000.01)
+
+            selected_boxes = tf.gather(coordinates2, selected_indices)
+
+
+            imageRGB = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+            im = Image.fromarray(imageRGB)
+
+            print("Number of selected boxes: " + str(len(selected_boxes)))
+            for box in selected_boxes:
+                top, left, bottom, right = box[0].numpy(), box[1].numpy(), box[2].numpy(), box[3].numpy()
+                draw = ImageDraw.Draw(im)
+                draw.rectangle([left, top, right-1, bottom-1], outline = "red")
+                draw.text((left + 3, top + 3), dict[(top, left, bottom, right)], color = "red")
+                    
+            try:
+                os.mkdir("PostPatchInferencedImages")
+            except OSError as error:
+                pass
+            print("link:" + str(link))
+            im.save("/home/ec2-user/visionaries/PostPatchInferencedImages/" + os.path.basename(link))
