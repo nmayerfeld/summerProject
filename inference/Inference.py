@@ -84,7 +84,6 @@ for filename in os.listdir(directory):
         print("Predictions completed.")
 
 
-
         for index, prediction in enumerate(predictions):
             score = prediction
             top, left, bottom, right =  coordinates[index][0].numpy(), coordinates[index][1].numpy(), coordinates[index][2].numpy(), coordinates[index][3].numpy(),
@@ -117,12 +116,16 @@ for filename in os.listdir(directory):
 
         counter = 0
         total = 0
+        max = 0
         for box in selected_boxes:
             top, left, bottom, right = box[0].numpy(), box[1].numpy(), box[2].numpy(), box[3].numpy() 
-            total += (right-left)*(bottom - top)
+            area = (right-left)*(bottom - top)
+            total += area
+            if area > max:
+                max = area
             counter += 1
         if counter != 0:
-            average = total/counter
+            adjustedaverage = ((total/counter) + max) / 2
 
 
         sizes = []
@@ -130,7 +133,7 @@ for filename in os.listdir(directory):
         for box in selected_boxes:
             top, left, bottom, right = box[0].numpy(), box[1].numpy(), box[2].numpy(), box[3].numpy()
             size = (right - left) * (bottom-top)
-            denominator = (average + (average/100)) - size
+            denominator = (adjustedaverage + (adjustedaverage/100)) - size
             if denominator == 0:
                 denominator = .01
             sizes.append(np.float32((1/(denominator)) + 1))
@@ -166,8 +169,8 @@ for filename in os.listdir(directory):
                 draw.text((left + 3, top + 3), dict[(top, left, bottom, right)], color = "red")
                     
             try:
-                os.mkdir("PostPatchInferencedImages")
+                os.mkdir("PostPatchInferencedImagesTakeTwo")
             except OSError as error:
                 pass
             print("link:" + str(link))
-            im.save("/home/ec2-user/visionaries/PostPatchInferencedImages/" + os.path.basename(link))
+            im.save("/home/ec2-user/visionaries/PostPatchInferencedImagesTakeTwo/" + os.path.basename(link))
