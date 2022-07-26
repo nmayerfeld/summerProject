@@ -101,8 +101,15 @@ for split in coco_data.keys():
             continue
         else:
             if random.randint(0, 100) < 4:
-                filename = "Tests/"+ str(id) + ".jpg"
-                copy.save(filename)
+                for count,label in enumerate(labelNums):
+                    if label in numbers:
+                        bbox = bboxes[count].numpy
+                        top, left, bottom, right = bbox[0] * shape[0], bbox[1] * shape[1], bbox[2] * shape[0], bbox[3] * shape[1] #this is a tensorflow box of an animal
+                        if (right - left + 1) * (bottom - top + 1) < 6400:
+                            save = True
+                if save:
+                    filename = "Tests/"+ str(id) + ".jpg"
+                    copy.save(filename)
             else:
                 shape = image.shape
                 #draw = ImageDraw.Draw(copy)
