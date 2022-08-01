@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block head %} 
+    
+{% endblock %}
+    
+{% block content %}
+<body>
+    <p>OBJECT DETECTION:<br>When passed an image, the program can identify where the animals are located in this image and draw boxes around them
+       <br> IMAGE CLASSIFICATION:<br>When passed those cropped photos of the animals from the original image, the model can classify the type of animal that it is<br>
+        RESULT:<br>The program will return the original image with red boxes drawn around the animals and labels printed within each box.</p>
+    <!--<label for="animals" class="choice">Please choose an animal:</label>-->
+    <div class="setup">
+    <span>Generate random photo to pass to model:</span>
+    <form name='animals' method="POST" action="{{url_for('upload_image')}}" enctype="multipart/form-data" id="animals">
+        <input type="submit" value="Generate">
+    </form>
+    </div>
+</body>
+
+<footer>
+    <a href="https://github.com/nmayerfeld/summerProject.git" target="_blank">Come visit our github!!</a>
+    <h3>Created by: <br> Judah Goldring, Akiva Sturm, Josh Brafman, Aaron Meoded, Noam Mayerfeld</h3>
+    <h4>**This website features the model that we made, ran, and saved the results of, since this the web app does not have the environment to run the model live. However, all images shown are test images the model had never seen prior to it being ran.**</h4>
+</footer> 
+{% endblock %}
+   
